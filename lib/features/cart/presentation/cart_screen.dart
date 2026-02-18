@@ -1,41 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luxe/core/theme/app_theme.dart';
-import 'package:luxe/features/catalog/domain/product.dart';
+import 'package:luxe/features/cart/domain/cart_item.dart';
+import 'package:luxe/features/cart/presentation/providers/cart_providers.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dummy cart items for visualization
-    final cartItems = [
-      const Product(
-        id: '1',
-        name: 'Premium Leather Sneakers',
-        description: 'Size: 42',
-        price: 199.00,
-        images: ['https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80'],
-        sizes: ['42'],
-        colors: ['White'],
-        inStock: true,
-        rating: 4.8,
-        reviewCount: 124,
-      ),
-      const Product(
-        id: '2',
-        name: 'Minimalist Wristwatch',
-        description: 'Color: Silver',
-        price: 149.50,
-        images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'],
-        sizes: [],
-        colors: ['Silver'],
-        inStock: true,
-        rating: 4.9,
-        reviewCount: 89,
-      ),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartItems = ref.watch(cartProvider);
 
-    double subtotal = cartItems.fold(0, (sum, item) => sum + item.price);
+    double subtotal = cartItems.fold(0, (sum, item) => sum + item.totalPrice);
     double shipping = 10.00;
     double total = subtotal + shipping;
 
@@ -123,13 +99,13 @@ class CartScreen extends StatelessWidget {
   }
 }
 
-class CartItemCard extends StatelessWidget {
-  final Product item;
+class CartItemCard extends ConsumerWidget {
+  final CartItem item;
 
   const CartItemCard({required this.item, super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -143,7 +119,7 @@ class CartItemCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              item.images.first,
+              item.product.images.first,
               width: 80,
               height: 80,
               fit: BoxFit.cover,
@@ -157,13 +133,13 @@ class CartItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.name,
+                  item.product.name,
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  item.description,
+                  item.product.description,
                   style: const TextStyle(color: AppTheme.secondaryText, fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -172,7 +148,7 @@ class CartItemCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '\$${item.price.toStringAsFixed(2)}',
+                      '\$${item.product.price.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
@@ -187,15 +163,15 @@ class CartItemCard extends StatelessWidget {
                       child: Row(
                         children: [
                           InkWell(
-                            onTap: () {},
+                            onTap: () => ref.read(cartProvider.notifier).decrement(item.product.id),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               child: Text('-', style: TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ),
-                          const Text('1', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
                           InkWell(
-                            onTap: () {},
+                            onTap: () => ref.read(cartProvider.notifier).increment(item.product.id),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               child: Text('+', style: TextStyle(fontWeight: FontWeight.bold)),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:luxe/main_nav_scaffold.dart';
+import 'package:luxe/core/presentation/main_nav_scaffold.dart';
 import 'package:luxe/features/catalog/presentation/product_list_screen.dart';
 import 'package:luxe/features/cart/presentation/cart_screen.dart';
-import 'package:luxe/core/presentation/placeholder_screen.dart';
+import 'package:luxe/features/search/presentation/search_screen.dart';
+import 'package:luxe/features/profile/presentation/profile_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shopNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shop');
@@ -38,7 +39,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/search',
-                builder: (context, state) => const PlaceholderScreen('Search'),
+                builder: (context, state) => const SearchScreen(),
               ),
             ],
           ),
@@ -60,7 +61,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const PlaceholderScreen('Profile'),
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

@@ -105,7 +105,7 @@ class AppTheme {
       ),
 
       // Card Theme (Low elevation or Border)
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
