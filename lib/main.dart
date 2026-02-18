@@ -23,6 +23,7 @@ class LuxeApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
+      locale: const Locale('en', 'KE'),
     );
   }
 }

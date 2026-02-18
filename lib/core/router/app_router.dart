@@ -5,9 +5,14 @@ import 'package:luxe/features/catalog/presentation/product_list_screen.dart';
 import 'package:luxe/features/cart/presentation/cart_screen.dart';
 import 'package:luxe/features/search/presentation/search_screen.dart';
 import 'package:luxe/features/profile/presentation/profile_screen.dart';
+import 'package:luxe/features/splash/presentation/splash_screen.dart';
+import 'package:luxe/features/auth/presentation/screens/login_screen.dart';
+import 'package:luxe/features/auth/presentation/screens/signup_screen.dart';
+import 'package:luxe/features/auth/presentation/screens/forgot_password_screen.dart';
+
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<NavigatorState> _shopNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shop');
+final GlobalKey<NavigatorState> _catalogNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'catalog');
 final GlobalKey<NavigatorState> _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
 final GlobalKey<NavigatorState> _cartNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'cart');
 final GlobalKey<NavigatorState> _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
@@ -15,19 +20,40 @@ final GlobalKey<NavigatorState> _profileNavigatorKey = GlobalKey<NavigatorState>
 class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/shop',
+    initialLocation: '/',
     routes: [
+      // Splash Route
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      // Login Route
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      // Signup Route
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupScreen(),
+      ),
+      // Forgot Password Route
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      // Main Shell
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainNavScaffold(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 1: Shop
+          // Branch 1: Catalog (was Shop)
           StatefulShellBranch(
-            navigatorKey: _shopNavigatorKey,
+            navigatorKey: _catalogNavigatorKey,
             routes: [
               GoRoute(
-                path: '/shop',
+                path: '/catalog',
                 builder: (context, state) => const ProductListScreen(),
               ),
             ],

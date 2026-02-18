@@ -11,6 +11,11 @@ class AppTheme {
   static const Color dividerColor = Color(0xFFE5E7EB); // Light Smoke
   static const Color errorColor = Color(0xFFD32F2F);
 
+  // New Constants
+  static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color deepOnyx = Color(0xFF1A1A1A);
+  static const Color trueIndigo = Color(0xFF3F51B5); // Primary Button Color
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

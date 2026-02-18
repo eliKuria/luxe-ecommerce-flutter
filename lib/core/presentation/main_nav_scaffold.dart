@@ -36,7 +36,7 @@ class MainNavScaffold extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Icon(Icons.grid_view_outlined),
               activeIcon: Icon(Icons.grid_view_rounded),
-              label: 'Shop',
+              label: 'Catalog',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.search_outlined),
