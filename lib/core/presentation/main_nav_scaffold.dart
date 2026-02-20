@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luxe/core/theme/app_theme.dart';
+import 'package:luxe/features/cart/presentation/providers/cart_providers.dart';
 
-class MainNavScaffold extends StatelessWidget {
+class MainNavScaffold extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainNavScaffold({
@@ -18,44 +20,64 @@ class MainNavScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ConsumerWidgetRef ref) {
+    // Watch cart for badge count
+    final cartAsync = ref.watch(cartProvider);
+    final cartCount = cartAsync.valueOrNull?.fold<int>(0, (int sum, item) => sum + item.quantity) ?? 0;
+
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: AppTheme.dividerColor, width: 1),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: _goBranch,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppTheme.pureWhite,
+        selectedItemColor: AppTheme.primaryColor,
+        unselectedItemColor: AppTheme.secondaryText,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_rounded),
+            label: 'Shop',
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          onTap: _goBranch,
-          // Theme values are already set in AppTheme, but explicit here for safety/clarity if needed
-          // items: ...
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_outlined),
-              activeIcon: Icon(Icons.grid_view_rounded),
-              label: 'Catalog',
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search_rounded),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Badge(
+              isLabelVisible: cartCount > 0,
+              label: Text(
+                cartCount > 99 ? '99+' : '$cartCount',
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: AppTheme.primaryColor,
+              child: const Icon(Icons.shopping_bag_outlined),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              activeIcon: Icon(Icons.search_rounded),
-              label: 'Search',
+            activeIcon: Badge(
+              isLabelVisible: cartCount > 0,
+              label: Text(
+                cartCount > 99 ? '99+' : '$cartCount',
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: AppTheme.primaryColor,
+              child: const Icon(Icons.shopping_bag_rounded),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_outlined),
-              activeIcon: Icon(Icons.shopping_cart_rounded),
-              label: 'Cart',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-          ],
-        ),
+            label: 'Cart',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
 }
+
+// Need to use ConsumerWidgetRef instead of WidgetRef for the ref parameter type
+typedef ConsumerWidgetRef = WidgetRef;

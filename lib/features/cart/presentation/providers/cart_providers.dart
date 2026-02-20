@@ -1,67 +1,49 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luxe/features/cart/data/cart_repository_impl.dart';
 import 'package:luxe/features/cart/domain/cart_item.dart';
-import 'package:luxe/features/catalog/domain/product.dart';
+import 'package:luxe/features/cart/domain/cart_repository.dart';
 
-// Dummy data for now
-final cartProvider = NotifierProvider<CartNotifier, List<CartItem>>(CartNotifier.new);
+final cartRepositoryProvider =
+    Provider<CartRepository>((ref) => CartRepositoryImpl());
 
-class CartNotifier extends Notifier<List<CartItem>> {
+final cartProvider =
+    AsyncNotifierProvider<CartNotifier, List<CartItem>>(CartNotifier.new);
+
+class CartNotifier extends AsyncNotifier<List<CartItem>> {
+  late final CartRepository _repository;
+
   @override
-  List<CartItem> build() {
-    return [
-      const CartItem(
-        product: Product(
-          id: '1',
-          name: 'Premium Leather Sneakers',
-          description: 'Size: 42',
-          price: 199.00,
-          images: ['https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80'],
-          sizes: ['42'],
-          colors: ['White'],
-          inStock: true,
-          rating: 4.8,
-          reviewCount: 124,
-        ),
-        quantity: 1,
-      ),
-      const CartItem(
-        product: Product(
-          id: '2',
-          name: 'Minimalist Wristwatch',
-          description: 'Color: Silver',
-          price: 149.50,
-          images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'],
-          sizes: [],
-          colors: ['Silver'],
-          inStock: true,
-          rating: 4.9,
-          reviewCount: 89,
-        ),
-        quantity: 1,
-      ),
-    ];
+  Future<List<CartItem>> build() async {
+    _repository = ref.watch(cartRepositoryProvider);
+    return _repository.getCartItems();
   }
 
-  void increment(String productId) {
-    state = [
-      for (final item in state)
-        if (item.product.id == productId)
-          item.copyWith(quantity: item.quantity + 1)
-        else
-          item,
-    ];
+  Future<void> addToCart(int productId, {int quantity = 1}) async {
+    await _repository.addToCart(productId, quantity: quantity);
+    state = await AsyncValue.guard(() => _repository.getCartItems());
   }
 
-  void decrement(String productId) {
-    state = [
-      for (final item in state)
-        if (item.product.id == productId)
-          if (item.quantity > 1)
-            item.copyWith(quantity: item.quantity - 1)
-          else
-            item // Should probably remove if 0, but keeping simple for now
-        else
-          item,
-    ];
+  Future<void> increment(int cartItemId, int currentQty) async {
+    await _repository.updateQuantity(cartItemId, currentQty + 1);
+    state = await AsyncValue.guard(() => _repository.getCartItems());
+  }
+
+  Future<void> decrement(int cartItemId, int currentQty) async {
+    if (currentQty <= 1) {
+      await _repository.removeFromCart(cartItemId);
+    } else {
+      await _repository.updateQuantity(cartItemId, currentQty - 1);
+    }
+    state = await AsyncValue.guard(() => _repository.getCartItems());
+  }
+
+  Future<void> remove(int cartItemId) async {
+    await _repository.removeFromCart(cartItemId);
+    state = await AsyncValue.guard(() => _repository.getCartItems());
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _repository.getCartItems());
   }
 }

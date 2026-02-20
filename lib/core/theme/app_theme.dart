@@ -14,7 +14,8 @@ class AppTheme {
   // New Constants
   static const Color pureWhite = Color(0xFFFFFFFF);
   static const Color deepOnyx = Color(0xFF1A1A1A);
-  static const Color trueIndigo = Color(0xFF3F51B5); // Primary Button Color
+  static const Color orange = Color(0xFFFF5722); // Primary Button Color
+  static const Color secondaryAction = Color(0xFF2C2C2E); // Secondary actions / buttons
 
   static ThemeData get lightTheme {
     return ThemeData(

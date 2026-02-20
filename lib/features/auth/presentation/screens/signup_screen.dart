@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luxe/core/utils/error_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luxe/core/theme/app_theme.dart';
@@ -41,7 +42,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         final state = ref.read(authControllerProvider);
         if (state.hasError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error.toString()), backgroundColor: AppTheme.errorColor),
+            SnackBar(content: Text(friendlyError(state.error)), backgroundColor: AppTheme.errorColor),
           );
         } else {
           context.go('/catalog');
