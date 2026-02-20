@@ -7,17 +7,25 @@ import 'package:luxe/features/catalog/presentation/providers/product_providers.d
 import 'package:luxe/features/catalog/presentation/providers/product_detail_state.dart';
 import 'package:luxe/features/cart/presentation/providers/cart_providers.dart';
 
-class ProductDetailScreen extends ConsumerWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   final int productId;
 
   const ProductDetailScreen({required this.productId, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  bool _showStepper = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final productId = widget.productId;
     final productAsync = ref.watch(productDetailProvider(productId));
     final selectedColor = ref.watch(selectedColorProvider(productId));
     final selectedSize = ref.watch(selectedSizeProvider(productId));
     final quantity = ref.watch(productQuantityProvider(productId));
+
 
     return Scaffold(
       body: productAsync.when(
@@ -202,9 +210,9 @@ class ProductDetailScreen extends ConsumerWidget {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                                  color: isSelected ? AppTheme.secondaryAction : Colors.transparent,
                                   border: Border.all(
-                                    color: isSelected ? AppTheme.primaryColor : AppTheme.dividerColor,
+                                    color: isSelected ? AppTheme.secondaryAction : AppTheme.dividerColor,
                                     width: isSelected ? 1.5 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
@@ -252,9 +260,9 @@ class ProductDetailScreen extends ConsumerWidget {
                                 height: 48,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                                  color: isSelected ? AppTheme.secondaryAction : Colors.transparent,
                                   border: Border.all(
-                                    color: isSelected ? AppTheme.primaryColor : AppTheme.dividerColor,
+                                    color: isSelected ? AppTheme.secondaryAction : AppTheme.dividerColor,
                                     width: isSelected ? 1.5 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
@@ -274,74 +282,6 @@ class ProductDetailScreen extends ConsumerWidget {
                         const SizedBox(height: 20),
                       ],
 
-                      // Quantity selector
-                      const Text(
-                        'QUANTITY',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.secondaryText,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          // Minus button
-                          GestureDetector(
-                            onTap: quantity > 1
-                                ? () => ref.read(productQuantityProvider(productId).notifier).state--
-                                : null,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.remove,
-                                color: quantity > 1 ? Colors.white : Colors.white54,
-                                size: 22,
-                              ),
-                            ),
-                          ),
-                          // Count
-                          SizedBox(
-                            width: 64,
-                            child: Text(
-                              '$quantity',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryText,
-                              ),
-                            ),
-                          ),
-                          // Plus button
-                          GestureDetector(
-                            onTap: quantity < product.stock
-                                ? () => ref.read(productQuantityProvider(productId).notifier).state++
-                                : null,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.add,
-                                color: quantity < product.stock ? Colors.white : Colors.white54,
-                                size: 22,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 24),
 
                       // Description
@@ -410,7 +350,6 @@ class ProductDetailScreen extends ConsumerWidget {
         ),
       ),
 
-      // Bottom Add-to-Cart bar
       bottomNavigationBar: productAsync.when(
         data: (product) => Container(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -425,37 +364,133 @@ class ProductDetailScreen extends ConsumerWidget {
             ],
           ),
           child: SizedBox(
-            width: double.infinity,
             height: 54,
-            child: ElevatedButton.icon(
-              onPressed: product.inStock
-                  ? () {
-                      // Add quantity items to cart
-                      for (int i = 0; i < quantity; i++) {
-                        ref.read(cartProvider.notifier).addToCart(product.id);
-                      }
-                      // Reset quantity
-                      ref.read(productQuantityProvider(productId).notifier).state = 1;
-                      // Show simple toast consistent with signup style
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${quantity > 1 ? '$quantity × ' : ''}${product.name} added to cart',
-                          ),
-                          backgroundColor: AppTheme.secondaryAction,
-                          duration: const Duration(seconds: 2),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              ),
+              child: _showStepper
+                  // ── Stepper (replaces button after first add) ──────────────
+                  ? Row(
+                      key: const ValueKey('stepper'),
+                      children: [
+                        // Minus
+                        _orangeStepperBtn(
+                          icon: Icons.remove,
+                          enabled: quantity > 1,
+                          onTap: () {
+                            if (quantity > 1) {
+                              ref.read(productQuantityProvider(productId).notifier).state--;
+                              // Update cart quantity in real-time
+                              ref.read(cartProvider.notifier).addToCart(
+                                product.id,
+                                quantity: quantity - 1,
+                              );
+                            }
+                          },
                         ),
-                      );
-                    }
-                  : null,
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: Text(product.inStock ? 'Add to Cart' : 'Out of Stock'),
+                        // Count
+                        Expanded(
+                          child: Text(
+                            '$quantity',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryText,
+                            ),
+                          ),
+                        ),
+                        // Plus
+                        _orangeStepperBtn(
+                          icon: Icons.add,
+                          enabled: quantity < product.stock,
+                          onTap: () {
+                            if (quantity < product.stock) {
+                              ref.read(productQuantityProvider(productId).notifier).state++;
+                              // Update cart quantity in real-time
+                              ref.read(cartProvider.notifier).addToCart(
+                                product.id,
+                                quantity: quantity + 1,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    )
+                  // ── Initial Add to Cart button ─────────────────────────────
+                  : SizedBox(
+                      key: const ValueKey('add-btn'),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: product.inStock
+                            ? () {
+                                ref.read(cartProvider.notifier).addToCart(
+                                  product.id,
+                                  quantity: quantity,
+                                );
+                                setState(() => _showStepper = true);
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${quantity > 1 ? '$quantity × ' : ''}${product.name} added to cart',
+                                    ),
+                                    backgroundColor: AppTheme.secondaryAction,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          product.inStock ? 'Add to Cart' : 'Out of Stock',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
             ),
           ),
         ),
         loading: () => const SizedBox.shrink(),
         error: (_, __) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  /// Orange-filled stepper button (shown after item is added to cart)
+  Widget _orangeStepperBtn({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 56,
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: enabled ? AppTheme.primaryColor : const Color(0xFFE5E7EB),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          color: Colors.white,
+        ),
       ),
     );
   }

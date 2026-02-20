@@ -59,22 +59,33 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
         },
       );
 
-      final data = res.data as Map<String, dynamic>;
+      // res.data is the decoded JSON body regardless of HTTP status code.
+      final data = res.data;
 
-      if (data['success'] == true) {
-        return data['checkoutRequestId'] as String;
-      } else {
-        final error = data['error']?.toString() ?? '';
-        throw Exception(_friendlyPaymentError(error));
+      if (data is Map<String, dynamic>) {
+        if (data['success'] == true) {
+          return data['checkoutRequestId'] as String;
+        } else {
+          final error = data['error']?.toString() ??
+              data['message']?.toString() ??
+              '';
+          throw Exception(
+            error.isNotEmpty ? _friendlyPaymentError(error) : _friendlyPaymentError(''),
+          );
+        }
       }
-    } on FunctionException {
+
       throw Exception(
-        'We couldn\'t connect to the payment service. Please try again in a moment.',
+        'We received an unexpected response from the payment service. Please try again.',
+      );
+    } on FunctionException catch (e) {
+      final details = e.details?.toString() ?? '';
+      if (details.isNotEmpty) throw Exception(_friendlyPaymentError(details));
+      throw Exception(
+        'We couldn\'t reach the payment service. Please check your connection and try again.',
       );
     } catch (e) {
-      if (e is Exception && e.toString().contains('Exception: ')) {
-        rethrow;
-      }
+      if (e is Exception && e.toString().contains('Exception: ')) rethrow;
       throw Exception(
         'Something went wrong while processing your payment. Please try again.',
       );

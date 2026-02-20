@@ -112,7 +112,7 @@ class CheckoutController extends AsyncNotifier<PaymentStatus> {
 
   /// Place order for cash on delivery
   Future<void> placeOrderCashOnDelivery({
-    required String phone,
+    String? phone,
     required double amount,
   }) async {
     final repo = ref.read(checkoutRepositoryProvider);

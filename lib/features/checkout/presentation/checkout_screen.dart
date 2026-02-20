@@ -25,13 +25,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     super.dispose();
   }
 
-  /// Convert 10-digit 07xx to 2547xx format for M-Pesa API
+  /// Convert user input to 2547XXXXXXXX format.
+  /// Accepts:
+  ///   9-digit  "7XXXXXXXX"  → prefixes 254
+  ///   10-digit "07XXXXXXXX" → strips leading 0, prefixes 254
   String _toMpesaFormat(String input) {
     final digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('254') && digits.length == 12) return digits;
     if (digits.startsWith('0') && digits.length == 10) {
       return '254${digits.substring(1)}';
     }
-    return digits;
+    if (digits.length == 9) {
+      return '254$digits';
+    }
+    return digits; // pass-through — validator will catch bad input
   }
 
   @override
@@ -81,7 +88,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 24),
                   _buildPaymentMethodSelector(paymentMethod, isProcessing),
                   const SizedBox(height: 24),
-                  _buildPhoneInput(isProcessing, paymentMethod),
+                  // Phone input is only needed for M-Pesa Pay Now.
+                  // For Pay on Delivery the rider collects a prompt on arrival.
+                  if (paymentMethod == PaymentMethod.mpesa)
+                    _buildPhoneInput(isProcessing),
                   const SizedBox(height: 16),
                   if (paymentStatus.state != PaymentState.idle)
                     _buildStatusBanner(paymentStatus, isProcessing),
@@ -257,7 +267,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             Expanded(
               child: _paymentOption(
                 icon: Icons.local_shipping_outlined,
-                label: 'Cash',
+                label: 'M-Pesa',
                 subtitle: 'Pay on delivery',
                 isSelected: selected == PaymentMethod.cashOnDelivery,
                 enabled: !isProcessing,
@@ -320,20 +330,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   // ── Phone Input ─────────────────────────────────────────────────
 
-  Widget _buildPhoneInput(bool isProcessing, PaymentMethod paymentMethod) {
+  Widget _buildPhoneInput(bool isProcessing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          paymentMethod == PaymentMethod.mpesa ? 'M-Pesa Phone Number' : 'Delivery Contact',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryText),
+        const Text(
+          'M-Pesa Phone Number',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryText),
         ),
         const SizedBox(height: 4),
-        Text(
-          paymentMethod == PaymentMethod.mpesa
-              ? 'Enter the Safaricom number to receive the M-Pesa prompt'
-              : 'We\'ll call this number for delivery',
-          style: const TextStyle(fontSize: 13, color: AppTheme.secondaryText),
+        const Text(
+          'Enter the 9-digit Safaricom number (e.g. 712 345 678)',
+          style: TextStyle(fontSize: 13, color: AppTheme.secondaryText),
         ),
         const SizedBox(height: 12),
         Form(
@@ -344,11 +352,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
+              LengthLimitingTextInputFormatter(9),
               _KenyanPhoneFormatter(),
             ],
             decoration: InputDecoration(
-              hintText: '0712 345 678',
+              hintText: '712 345 678',
               hintStyle: const TextStyle(color: AppTheme.secondaryText),
               prefixIcon: const Padding(
                 padding: EdgeInsets.only(left: 16, right: 8),
@@ -378,11 +386,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your phone number';
+              if (value == null || value.isEmpty) return 'Please enter your M-Pesa number';
               final digits = value.replaceAll(RegExp(r'\D'), '');
-              if (digits.length != 10) return 'Enter all 10 digits (e.g. 0712 345 678)';
-              if (!digits.startsWith('07') && !digits.startsWith('01')) {
-                return 'Enter a valid Safaricom number starting with 07 or 01';
+              if (digits.length != 9) return 'Enter 9 digits starting with 7 (e.g. 712 345 678)';
+              if (!digits.startsWith('7') && !digits.startsWith('1')) {
+                return 'Enter a valid Safaricom number starting with 7 or 1';
               }
               return null;
             },
@@ -442,8 +450,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final buttonLabel = status.state == PaymentState.failed
         ? 'Try Again'
         : method == PaymentMethod.mpesa
-            ? 'Pay with M-Pesa'
-            : 'Place Order';
+            ? 'Pay Now with M-Pesa'
+            : 'Pay on Delivery with M-Pesa';
 
     return SizedBox(
       width: double.infinity,
@@ -527,8 +535,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   // ── Handlers ────────────────────────────────────────────────────
 
   void _handlePay(AsyncValue<List<CartItem>> cartAsync, PaymentMethod method) {
-    if (!_formKey.currentState!.validate()) return;
-
     final cartItems = cartAsync.valueOrNull;
     if (cartItems == null || cartItems.isEmpty) return;
 
@@ -536,19 +542,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     const shipping = 1300.0;
     final total = subtotal + shipping;
 
-    final rawDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
-
-    if (method == PaymentMethod.mpesa) {
-      ref.read(checkoutControllerProvider.notifier).startMpesaPayment(
-        phone: _toMpesaFormat(rawDigits),
-        amount: total,
-      );
-    } else {
+    if (method == PaymentMethod.cashOnDelivery) {
+      // COD: place the order immediately — no phone validation required.
+      // The rider will handle payment on arrival.
       ref.read(checkoutControllerProvider.notifier).placeOrderCashOnDelivery(
-        phone: _toMpesaFormat(rawDigits),
+        phone: null,
         amount: total,
       );
+      return;
     }
+
+    // M-Pesa Pay Now: phone number is required
+    if (!_formKey.currentState!.validate()) return;
+
+    final rawDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    ref.read(checkoutControllerProvider.notifier).startMpesaPayment(
+      phone: _toMpesaFormat(rawDigits),
+      amount: total,
+    );
   }
 
   Color _statusBgColor(PaymentState state) {
@@ -574,7 +585,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 }
 
-/// Formatter that groups digits as: 0712 345 678
+/// Formatter that groups 9 digits as: 712 345 678  (matching +254 prefix)
 class _KenyanPhoneFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -582,13 +593,11 @@ class _KenyanPhoneFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    if (digits.length > 10) {
-      return oldValue;
-    }
+    if (digits.length > 9) return oldValue;
 
     final buffer = StringBuffer();
     for (int i = 0; i < digits.length; i++) {
-      if (i == 4 || i == 7) buffer.write(' ');
+      if (i == 3 || i == 6) buffer.write(' ');
       buffer.write(digits[i]);
     }
 
