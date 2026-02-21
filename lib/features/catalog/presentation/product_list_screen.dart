@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'package:shimmer/shimmer.dart';
 
 // Selected category on home page (null = All)
 final homeCategoryProvider = StateProvider<String?>((ref) => null);
+final carouselPageIndexProvider = StateProvider<int>((ref) => 0);
 
 // Filtered products for the home page grid
 final homeProductsProvider = Provider<AsyncValue<List<Product>>>((ref) {
@@ -84,55 +86,9 @@ class ProductListScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Promo Banner
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    child: Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF5722), Color(0xFFFF8A65)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.all(24),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'NEW ARRIVALS',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Spring Collection 2026',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Up to 30% off on selected items',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                // New Arrivals Carousel
+                const SliverToBoxAdapter(
+                  child: _NewArrivalsCarousel(),
                 ),
 
                 // Categories Header
@@ -280,6 +236,177 @@ class ProductListScreen extends ConsumerWidget {
       case 'living': return Icons.home_outlined;
       default: return Icons.category_outlined;
     }
+  }
+}
+
+class _NewArrivalsCarousel extends ConsumerStatefulWidget {
+  const _NewArrivalsCarousel();
+
+  @override
+  ConsumerState<_NewArrivalsCarousel> createState() => _NewArrivalsCarouselState();
+}
+
+class _NewArrivalsCarouselState extends ConsumerState<_NewArrivalsCarousel> {
+  late PageController _pageController;
+  Timer? _timer;
+
+  final List<Map<String, String>> banners = [
+    {
+      'label': 'NEW ARRIVALS',
+      'title': 'Spring Collection 2026',
+      'subtitle': 'Up to 30% off on selected items',
+    },
+    {
+      'label': 'LIMITED EDITION',
+      'title': 'Luxury Watches',
+      'subtitle': 'Timeless elegance for your wrist',
+    },
+    {
+      'label': 'HOME DECOR',
+      'title': 'Premium Living',
+      'subtitle': 'Elevate your home experience',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        final nextPage = (_pageController.page!.toInt() + 1) % banners.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutQuart,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pageIndex = ref.watch(carouselPageIndexProvider);
+
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: banners.length,
+                onPageChanged: (index) => ref.read(carouselPageIndexProvider.notifier).state = index,
+                itemBuilder: (context, index) {
+                  final isActive = pageIndex == index;
+                  final banner = banners[index];
+                  
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.primaryColor,
+                              const Color(0xFFFF855F), 
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Content Overlay
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedOpacity(
+                              opacity: isActive ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 600),
+                              curve: Curves.easeOut,
+                              child: AnimatedSlide(
+                                offset: isActive ? Offset.zero : const Offset(0, 0.1),
+                                duration: const Duration(milliseconds: 600),
+                                curve: Curves.easeOut,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      banner['label']!,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      banner['title']!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      banner['subtitle']!,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              // Centered Indicators
+              // Indicators hidden to match reference precisely
+              const SizedBox.shrink(),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -469,7 +596,7 @@ class _HomeShimmer extends StatelessWidget {
           Shimmer.fromColors(
             baseColor: Colors.grey[300]!,
             highlightColor: Colors.grey[100]!,
-            child: Container(height: 140, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+            child: Container(height: 180, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
           ),
           const SizedBox(height: 24),
           Row(
@@ -508,3 +635,5 @@ class _HomeShimmer extends StatelessWidget {
     );
   }
 }
+
+// ── Shimmer Header Removed (redundant) ──

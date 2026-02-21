@@ -21,6 +21,11 @@ final productDetailProvider =
   return repo.getProductById(id);
 });
 
+final newArrivalsProvider = FutureProvider<List<Product>>((ref) {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.getNewArrivals(limit: 6);
+});
+
 class ProductListNotifier extends AsyncNotifier<List<Product>> {
   late final ProductRepository _repository;
 

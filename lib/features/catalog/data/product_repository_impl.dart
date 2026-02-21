@@ -64,4 +64,17 @@ class ProductRepositoryImpl implements ProductRepository {
         .map((json) => Product.fromJson(json as Map<String, dynamic>))
         .toList();
   }
+
+  @override
+  Future<List<Product>> getNewArrivals({int limit = 5}) async {
+    final response = await _client
+        .from('products')
+        .select()
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return (response as List)
+        .map((json) => Product.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 }

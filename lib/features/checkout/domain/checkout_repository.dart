@@ -3,6 +3,7 @@ abstract class CheckoutRepository {
   Future<int> createOrder({
     required double total,
     required String paymentMethod,
+    required List<dynamic> items,
     String? phone,
   });
 

@@ -3,6 +3,7 @@ import 'package:luxe/core/network/supa_service.dart';
 import 'package:luxe/features/profile/domain/order.dart';
 import 'package:luxe/features/profile/domain/profile_repository.dart';
 import 'package:luxe/features/profile/domain/user_profile.dart';
+import 'package:luxe/features/profile/domain/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -36,6 +37,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
           'email': email,
           'full_name': fullName,
           'avatar_url': avatarUrl,
+          'role': UserRole.customer.name,
+          'is_verified': false,
           'updated_at': DateTime.now().toIso8601String(),
         };
         
@@ -46,6 +49,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
           email: email,
           fullName: fullName,
           avatarUrl: avatarUrl,
+          role: UserRole.customer,
+          isVerified: false,
           createdAt: DateTime.now(),
         );
       }
@@ -99,6 +104,45 @@ class ProfileRepositoryImpl implements ProfileRepository {
           .toList();
     } catch (e) {
       throw Exception('We couldn\'t load your orders. Please check your connection and try again.');
+    }
+  }
+
+  @override
+  Future<Order> getOrderById(int id) async {
+    try {
+      final response = await _client
+          .from('orders')
+          .select()
+          .eq('id', id)
+          .eq('user_id', _userId)
+          .single();
+      return Order.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('We couldn\'t load the order details. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> updateRole(UserRole role) async {
+    try {
+      await _client
+          .from('profiles')
+          .update({'role': role.name, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', _userId);
+    } catch (e) {
+      throw Exception('Failed to update account type. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> verifyAccount() async {
+    try {
+      await _client
+          .from('profiles')
+          .update({'is_verified': true, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', _userId);
+    } catch (e) {
+      throw Exception('Failed to verify account. Please try again.');
     }
   }
 

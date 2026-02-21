@@ -5,4 +5,5 @@ abstract class ProductRepository {
   Future<Product> getProductById(int id);
   Future<List<String>> getCategories();
   Future<List<Product>> searchProducts(String query, {String? category});
+  Future<List<Product>> getNewArrivals({int limit = 5});
 }

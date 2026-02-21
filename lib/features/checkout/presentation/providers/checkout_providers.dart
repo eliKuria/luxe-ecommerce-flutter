@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:luxe/features/checkout/domain/checkout_repository.dart';
 import 'package:luxe/features/checkout/data/checkout_repository_impl.dart';
+import 'package:luxe/features/cart/presentation/providers/cart_providers.dart';
 
 /// Repository provider
 final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
@@ -74,9 +75,12 @@ class CheckoutController extends AsyncNotifier<PaymentStatus> {
         message: 'Creating your order...',
       ));
 
+      final items = ref.read(cartProvider).valueOrNull ?? [];
+
       final orderId = await repo.createOrder(
         total: amount,
         paymentMethod: 'mpesa',
+        items: items,
         phone: phone,
       );
 
@@ -123,9 +127,12 @@ class CheckoutController extends AsyncNotifier<PaymentStatus> {
         message: 'Placing your order...',
       ));
 
+      final items = ref.read(cartProvider).valueOrNull ?? [];
+
       final orderId = await repo.createOrder(
         total: amount,
         paymentMethod: 'cash_on_delivery',
+        items: items,
         phone: phone,
       );
 

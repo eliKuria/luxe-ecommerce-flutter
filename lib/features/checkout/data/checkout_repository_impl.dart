@@ -12,6 +12,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   Future<int> createOrder({
     required double total,
     required String paymentMethod,
+    required List<dynamic> items,
     String? phone,
   }) async {
     final orderNumber = 'LX-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
@@ -29,13 +30,27 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     }
 
     try {
+      // 1. Create the main order record
       final res = await _client
           .from('orders')
           .insert(insertData)
           .select('id')
           .single();
 
-      return res['id'] as int;
+      final orderId = res['id'] as int;
+
+      // 2. Create the individual order items for retailer tracking
+      final itemsToInsert = items.map((item) => {
+        'order_id': orderId,
+        'product_id': item.product.id,
+        'seller_id': item.product.sellerId,
+        'quantity': item.quantity,
+        'unit_price': item.product.price,
+      }).toList();
+
+      await _client.from('order_items').insert(itemsToInsert);
+
+      return orderId;
     } on PostgrestException catch (e) {
       throw Exception(_friendlyDbError(e.message));
     } catch (e) {
@@ -59,7 +74,6 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
         },
       );
 
-      // res.data is the decoded JSON body regardless of HTTP status code.
       final data = res.data;
 
       if (data is Map<String, dynamic>) {
@@ -103,7 +117,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
 
       return res['payment_status'] as String;
     } catch (_) {
-      return 'pending'; // Silently retry on poll errors
+      return 'pending';
     }
   }
 
@@ -112,11 +126,9 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     try {
       await _client.from('cart_items').delete().eq('user_id', _userId);
     } catch (_) {
-      // Cart clear failure is non-critical — order was still placed
     }
   }
 
-  /// Convert raw DB errors to friendly messages
   String _friendlyDbError(String raw) {
     if (raw.contains('violates foreign key')) {
       return 'Your session may have expired. Please log in again.';
@@ -127,7 +139,6 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     return 'We couldn\'t process your request. Please try again.';
   }
 
-  /// Convert raw payment errors to friendly messages
   String _friendlyPaymentError(String raw) {
     final lower = raw.toLowerCase();
     if (lower.contains('invalid') && lower.contains('jwt')) {

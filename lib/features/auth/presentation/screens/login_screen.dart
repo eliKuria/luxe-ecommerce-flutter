@@ -149,7 +149,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         width: 24,
                         child: Checkbox(
                           value: _keepMeSignedIn,
-                          activeColor: AppTheme.primaryColor,
+                          fillColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return AppTheme.primaryColor;
+                            }
+                            return null;
+                          }),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           onChanged: (val) {
                             setState(() {

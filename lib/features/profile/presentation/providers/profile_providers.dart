@@ -4,6 +4,7 @@ import 'package:luxe/features/profile/data/profile_repository_impl.dart';
 import 'package:luxe/features/profile/domain/order.dart';
 import 'package:luxe/features/profile/domain/profile_repository.dart';
 import 'package:luxe/features/profile/domain/user_profile.dart';
+import 'package:luxe/features/profile/domain/user_role.dart';
 
 // Repository provider
 final profileRepositoryProvider =
@@ -18,6 +19,18 @@ final profileControllerProvider =
 final ordersProvider = FutureProvider<List<Order>>((ref) {
   final repository = ref.watch(profileRepositoryProvider);
   return repository.getOrders();
+});
+
+// Single order detail provider
+final orderDetailProvider = FutureProvider.family<Order, int>((ref, id) {
+  final repository = ref.watch(profileRepositoryProvider);
+  return repository.getOrderById(id);
+});
+
+// User role provider
+final userRoleProvider = Provider<UserRole>((ref) {
+  final profile = ref.watch(profileControllerProvider).valueOrNull;
+  return profile?.role ?? UserRole.customer;
 });
 
 class ProfileController extends AsyncNotifier<UserProfile> {
@@ -41,6 +54,14 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await _repository.uploadAvatar(file);
+      return _repository.getProfile();
+    });
+  }
+
+  Future<void> updateRole(UserRole role) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await _repository.updateRole(role);
       return _repository.getProfile();
     });
   }

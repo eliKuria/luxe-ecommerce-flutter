@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:luxe/core/theme/app_theme.dart';
 import 'package:luxe/features/profile/domain/order.dart';
 import 'package:luxe/features/profile/domain/user_profile.dart';
+import 'package:luxe/features/profile/domain/user_role.dart';
 import 'package:luxe/features/profile/presentation/constants/profile_strings.dart';
 import 'package:luxe/features/profile/presentation/providers/profile_providers.dart';
 
@@ -32,7 +33,7 @@ class ProfileScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: AppTheme.deepOnyx),
-            onPressed: () {},
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
@@ -91,6 +92,11 @@ class _ProfileBody extends ConsumerWidget {
 
           const SizedBox(height: 32),
 
+          // ── Account Type Switch ──
+          _buildAccountTypeSection(context, ref),
+
+          const SizedBox(height: 32),
+
           // ── Sign Out ──
           _buildSignOutButton(context, ref),
 
@@ -98,6 +104,129 @@ class _ProfileBody extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildAccountTypeSection(BuildContext context, WidgetRef ref) {
+    final isRetailer = user.role == UserRole.retailer;
+    final isVerified = user.isVerified;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isRetailer ? Icons.store_rounded : Icons.person_rounded,
+                color: AppTheme.primaryColor,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Account Type',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.deepOnyx,
+                ),
+              ),
+              const Spacer(),
+              if (isVerified)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.verified_rounded, color: Colors.green, size: 14),
+                      SizedBox(width: 4),
+                      Text('Verified', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isRetailer
+                ? 'You are currently using a Retailer account. You can manage your products and view insights.'
+                : 'Switch to a Retailer account to start selling your own premium products on LUXE.',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.secondaryText,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => _handleRoleSwitch(context, ref),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                isRetailer ? 'Switch to Customer Account' : 'Switch to Retailer Account',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleRoleSwitch(BuildContext context, WidgetRef ref) async {
+    final isRetailer = user.role == UserRole.retailer;
+    final newRole = isRetailer ? UserRole.customer : UserRole.retailer;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isRetailer ? 'Switch to Customer?' : 'Become a Retailer?'),
+        content: Text(isRetailer
+            ? 'Your navigation will switch to shopping mode.'
+            : 'Your navigation will switch to retailer tools.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Switch',
+              style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await ref.read(profileControllerProvider.notifier).updateRole(newRole);
+    }
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -294,7 +423,7 @@ class _ProfileBody extends ConsumerWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () => context.push('/orders'),
                 child: const Text(
                   ProfileStrings.viewAll,
                   style: TextStyle(
@@ -346,13 +475,13 @@ class _ProfileBody extends ConsumerWidget {
                 );
               }
 
-              return ListView.separated(
+               return ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: orders.length > 4 ? 4 : orders.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) =>
-                    _OrderCard(order: orders[index]),
+                    _OrderCard(order: orders[index], onTap: () => context.push('/orders/${orders[index].id}')),
               );
             },
           ),
@@ -396,18 +525,21 @@ class _ProfileBody extends ConsumerWidget {
 
 class _OrderCard extends StatelessWidget {
   final Order order;
+  final VoidCallback? onTap;
 
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.dividerColor),
-      ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.dividerColor),
+        ),
       child: Row(
         children: [
           // Truck icon
@@ -464,6 +596,7 @@ class _OrderCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

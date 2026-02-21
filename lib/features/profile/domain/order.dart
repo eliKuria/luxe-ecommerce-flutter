@@ -4,6 +4,7 @@ class Order {
   final String status;
   final double total;
   final DateTime createdAt;
+  final int? itemCount;
 
   const Order({
     required this.id,
@@ -11,6 +12,7 @@ class Order {
     required this.status,
     required this.total,
     required this.createdAt,
+    this.itemCount,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Order {
       status: json['status'] as String,
       total: (json['total'] as num).toDouble(),
       createdAt: DateTime.parse(json['created_at'] as String),
+      itemCount: json['item_count'] as int?,
     );
   }
 }

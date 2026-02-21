@@ -1,8 +1,12 @@
+import 'package:luxe/features/profile/domain/user_role.dart';
+
 class UserProfile {
   final String id;
   final String email;
   final String? fullName;
   final String? avatarUrl;
+  final UserRole role;
+  final bool isVerified;
   final DateTime? createdAt;
 
   const UserProfile({
@@ -10,6 +14,8 @@ class UserProfile {
     required this.email,
     this.fullName,
     this.avatarUrl,
+    required this.role,
+    this.isVerified = false,
     this.createdAt,
   });
 
@@ -19,6 +25,8 @@ class UserProfile {
       email: (json['email'] as String?) ?? '',
       fullName: json['full_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      role: UserRoleX.fromString((json['role'] as String?) ?? 'customer'),
+      isVerified: (json['is_verified'] as bool?) ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -31,6 +39,8 @@ class UserProfile {
       'email': email,
       'full_name': fullName,
       'avatar_url': avatarUrl,
+      'role': role.name,
+      'is_verified': isVerified,
     };
   }
 }

@@ -12,6 +12,8 @@ class Product {
   final double rating;
   final int reviewCount;
   final String? collection;
+  final String? sellerId;
+  final DateTime? createdAt;
 
   const Product({
     required this.id,
@@ -27,6 +29,8 @@ class Product {
     this.rating = 0,
     this.reviewCount = 0,
     this.collection,
+    this.sellerId,
+    this.createdAt,
   });
 
   bool get inStock => stock > 0;
@@ -55,6 +59,10 @@ class Product {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: json['review_count'] as int? ?? 0,
       collection: json['collection'] as String?,
+      sellerId: json['seller_id'] as String?,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
     );
   }
 }
