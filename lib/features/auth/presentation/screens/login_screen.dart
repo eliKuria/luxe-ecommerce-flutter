@@ -191,51 +191,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   
                   const SizedBox(height: 40),
                   
-                  // Divider
-                  const Row(
-                    children: [
-                       Expanded(child: Divider()),
-                       Padding(
-                         padding: EdgeInsets.symmetric(horizontal: 16),
-                         child: Text(AuthStrings.orContinueWith, style: TextStyle(color: AppTheme.secondaryText, fontSize: 12, fontWeight: FontWeight.bold)),
-                       ),
-                       Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                  // // Divider
+                  // const Row(
+                  //   children: [
+                  //      Expanded(child: Divider()),
+                  //      Padding(
+                  //        padding: EdgeInsets.symmetric(horizontal: 16),
+                  //        child: Text(AuthStrings.orContinueWith, style: TextStyle(color: AppTheme.secondaryText, fontSize: 12, fontWeight: FontWeight.bold)),
+                  //      ),
+                  //      Expanded(child: Divider()),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 24),
 
-                  // Social Login (Mock)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.g_mobiledata, size: 28), // Placeholder for Google Logo
-                          label: const Text(AuthStrings.google, style: TextStyle(color: AppTheme.deepOnyx)),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: AppTheme.dividerColor),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.apple, size: 28),
-                          label: const Text(AuthStrings.apple, style: TextStyle(color: AppTheme.deepOnyx)),
-                          style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: const BorderSide(color: AppTheme.dividerColor),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // // Social Login (Mock)
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: OutlinedButton.icon(
+                  //         onPressed: () {},
+                  //         icon: const Icon(Icons.g_mobiledata, size: 28), // Placeholder for Google Logo
+                  //         label: const Text(AuthStrings.google, style: TextStyle(color: AppTheme.deepOnyx)),
+                  //         style: OutlinedButton.styleFrom(
+                  //           padding: const EdgeInsets.symmetric(vertical: 12),
+                  //           side: const BorderSide(color: AppTheme.dividerColor),
+                  //           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 16),
+                  //     Expanded(
+                  //       child: OutlinedButton.icon(
+                  //         onPressed: () {},
+                  //         icon: const Icon(Icons.apple, size: 28),
+                  //         label: const Text(AuthStrings.apple, style: TextStyle(color: AppTheme.deepOnyx)),
+                  //         style: OutlinedButton.styleFrom(
+                  //             padding: const EdgeInsets.symmetric(vertical: 12),
+                  //             side: const BorderSide(color: AppTheme.dividerColor),
+                  //             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
 
-                  const SizedBox(height: 40),
+                  // const SizedBox(height: 40),
 
                   // Footer
                   Row(
@@ -245,7 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                        GestureDetector(
                          onTap: () => context.go('/signup'),
                          child: const Text(
-                           AuthStrings.joinTheClub,
+                           AuthStrings.signUp,
                            style: TextStyle(
                              color: AppTheme.primaryColor,
                              fontWeight: FontWeight.bold,

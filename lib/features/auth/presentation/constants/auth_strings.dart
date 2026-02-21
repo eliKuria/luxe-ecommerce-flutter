@@ -11,6 +11,7 @@ class AuthStrings {
   static const String apple = 'Apple';
   static const String dontHaveAccount = "Don't have an account? ";
   static const String joinTheClub = 'Join the club.';
+  static const String signUp = 'Sign Up';
 
   // Signup
   static const String shopNow = 'ShopNow';
