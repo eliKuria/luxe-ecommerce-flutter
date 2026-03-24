@@ -1,16 +1,33 @@
-# luxe
+# Luxe – E-Commerce Mobile Application
 
-A new Flutter project.
+Luxe is a mobile e-commerce application built using Flutter, designed to deliver a clean, modern, and user-friendly shopping experience.
 
-## Getting Started
+## Overview
+This project was developed as a full product from concept to implementation, focusing on UI/UX design, performance, and scalability.
 
-This project is a starting point for a Flutter application.
+## Features
+- Product browsing and categories
+- Clean and intuitive user interface
+- Responsive mobile design
+- Modular and scalable UI components
+- Smooth navigation and user flow
 
-A few resources to get you started if this is your first Flutter project:
+## Tech Stack
+- Flutter (Dart)
+- UI/UX Design (Figma)
+- Version Control (Git)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## My Role
+- Conducted product research and defined user flows
+- Designed the complete UI/UX
+- Developed the mobile application using Flutter
+- Structured the project for scalability and maintainability
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Key Focus
+- User-centered design
+- Clean UI and usability
+- Scalable architecture for future expansion
+
+## Note
+This project later evolved into a more advanced multi-tenant SaaS platform (LuxeLaunch), expanding the concept into a scalable ecosystem.
+
