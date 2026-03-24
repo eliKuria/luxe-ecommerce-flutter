@@ -33,4 +33,4 @@ ean UI and usability
 This project later evolved into a more advanced multi-tenant SaaS platform (LuxeLaunch), expanding the concept into a scalable ecosystem.
 
 <img width="3424" height="1759" alt="Luxe -E-commerce App1" src="https://github.com/user-attachments/assets/fdc96fbd-9e9c-4de3-afd1-93bc6bb5198b" />
-<img width="3424" height="1759" alt="Luxe -E-commerce App1" src="https://github.com/user-attachments/assets/373d00bb-7e5c-409c-96c6-6567412666bf" />
+
