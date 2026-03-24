@@ -30,6 +30,8 @@ This project was developed as a full product from concept to implementation, foc
 
 ## Note
 This project later evolved into a more advanced multi-tenant SaaS platform (LuxeLaunch), expanding the concept into a scalable ecosystem.
+
 <img width="800" height="975" alt="Luxe -E-commerce App" src="https://github.com/user-attachments/assets/b1df0dcb-1645-4877-a54f-651be5bae748" />
+
 <img width="3424" height="1759" alt="Luxe -E-commerce App1" src="https://github.com/user-attachments/assets/fdc96fbd-9e9c-4de3-afd1-93bc6bb5198b" />
 
